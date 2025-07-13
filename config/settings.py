@@ -9,17 +9,16 @@ def load_settings():
         with open(SETTINGS_PATH, "r") as f:
             return json.load(f)
     return {
-        "job_titles": ["UAV Systems Engineer"],
-        "locations": ["UAE", "Qatar"],
-        "email": "your-email@gmail.com",
-        "password": "your-app-password",
-        "receiver": "mechboyshiyam@gmail.com",
-        "time": "12:00"
+        "job_titles": ["UAV Systems Engineer, UAV Flight Operations Engineer"],
+        "locations": ["UAE", "Qatar", "Singapore", "Kuwait"],
+        "spreadsheet_id": "1kLjsFQCupM0aP-Ww_NDUaedCF1ZW8VKtRenDzlduDi4"
     }
 
 def save_settings(settings):
+    allowed_keys = ["job_titles", "locations", "spreadsheet_id"]
+    clean_settings = {k: settings[k] for k in allowed_keys if k in settings}
     with open(SETTINGS_PATH, "w") as f:
-        json.dump(settings, f, indent=2)
+        json.dump(clean_settings, f, indent=2)
 
 def save_last_jobs(jobs):
     with open(LAST_JOBS_PATH, "w") as f:

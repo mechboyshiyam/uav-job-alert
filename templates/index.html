@@ -1,50 +1,115 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>UAV Job Alert</title>
     <style>
-        body { font-family: Arial; background: #0B0C10; color: #C5C6C7; padding: 20px; }
-        h1 { color: #66FCF1; }
-        input, textarea { width: 100%; margin-bottom: 10px; padding: 5px; }
-        .btn { padding: 10px; background: #45A29E; color: white; border: none; cursor: pointer; }
-        .job { padding: 10px; border: 1px solid #45A29E; margin-bottom: 10px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0B0C10;
+            color: #C5C6C7;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1, h2 {
+            color: #66FCF1;
+            margin-bottom: 20px;
+        }
+
+        form {
+            background-color: #1F2833;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.2);
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin: 12px 0 6px;
+            font-weight: bold;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #0B0C10;
+            border: 1px solid #45A29E;
+            border-radius: 6px;
+            color: #C5C6C7;
+        }
+
+        .btn {
+            background-color: #45A29E;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: #66FCF1;
+            color: #0B0C10;
+        }
+
+        .job {
+            background-color: #1F2833;
+            border-left: 4px solid #66FCF1;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(102, 252, 241, 0.1);
+        }
+
+        .job a {
+            color: #66FCF1;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .job a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-<h1>🛸 UAV Job Alert Dashboard</h1>
 
-<form method="post" action="/save">
-    <label>Job Titles (comma separated)</label>
-    <textarea name="job_titles">{{ ', '.join(settings['job_titles']) }}</textarea>
+    <h1>🛸 UAV Job Alert Dashboard</h1>
 
-    <label>Locations (comma separated)</label>
-    <textarea name="locations">{{ ', '.join(settings['locations']) }}</textarea>
+    <form method="post" action="/save">
+        <label for="job_titles">Job Titles (comma separated)</label>
+        <textarea name="job_titles" id="job_titles">{{ ', '.join(settings['job_titles']) }}</textarea>
 
-    <label>Email Sender</label>
-    <input type="email" name="email" value="{{ settings['email'] }}" required>
+        <label for="locations">Locations (comma separated)</label>
+        <textarea name="locations" id="locations">{{ ', '.join(settings['locations']) }}</textarea>
 
-    <label>App Password</label>
-    <input type="password" name="password" value="{{ settings['password'] }}" required>
+        <label for="spreadsheet_id">Google Spreadsheet ID</label>
+        <input type="text" name="spreadsheet_id" id="spreadsheet_id" value="{{ settings.get('spreadsheet_id', '') }}" required>
 
-    <label>Send To</label>
-    <input type="email" name="receiver" value="{{ settings['receiver'] }}" required>
+        <button class="btn" type="submit">💾 Save Settings</button>
+        <a href="/run-now" class="btn">🚀 Run Now</a>
+    </form>
 
-    <label>Send Time (24hr, e.g., 12:00)</label>
-    <input type="text" name="time" value="{{ settings['time'] }}" required>
+    <h2>📄 Latest Job Results</h2>
 
-    <button class="btn" type="submit">💾 Save Settings</button>
-    <a href="/run-now" class="btn">🚀 Run Now</a>
-</form>
+    {% if jobs %}
+        {% for job in jobs %}
+            <div class="job">
+                <strong>{{ job['title'] }}</strong><br>
+                {{ job['location'] }} | {{ job['source'] }} | Possibility: {{ job['possibility'] }}<br>
+                <a href="{{ job['link'] }}" target="_blank">View Job</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No job results found yet.</p>
+    {% endif %}
 
-<h2>📬 Last Sent Jobs</h2>
-{% for job in jobs %}
-<div class="job">
-    <strong>{{ job['title'] }}</strong><br>
-    {{ job['location'] }} | {{ job['source'] }} | Possibility: {{ job['possibility'] }}<br>
-    <a href="{{ job['link'] }}" target="_blank" style="color:#66FCF1;">View Job</a>
-</div>
-{% else %}
-<p>No jobs found or emailed yet.</p>
-{% endfor %}
 </body>
 </html>

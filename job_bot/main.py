@@ -1,30 +1,36 @@
 import json
 import os
-from job_bot.search import fetch_jobs
-from job_bot.mailer import send_email
+from datetime import datetime
+from job_bot.scraper import search_jobs
+from job_bot.storage import save_jobs, load_previous_jobs
+from job_bot.sheets_writer import write_jobs_to_sheet
 from config.settings import load_settings, save_last_jobs
-
-CACHE_FILE = "job_cache.json"
-
-def load_cache():
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE, "r") as f:
-            return json.load(f)
-    return []
-
-def save_cache(jobs):
-    with open(CACHE_FILE, "w") as f:
-        json.dump(jobs, f, indent=2)
-
-def filter_new_jobs(jobs, cache):
-    return [job for job in jobs if job not in cache]
 
 def run_job_search():
     settings = load_settings()
-    all_jobs = fetch_jobs(settings)
-    cache = load_cache()
-    new_jobs = filter_new_jobs(all_jobs, cache)
+    job_titles = settings.get('job_titles', [])
+    locations = settings.get('locations', [])
+    date_posted = settings.get('date_posted', 'Any')
+
+    print(f"🔍 Searching jobs for: {job_titles} in {locations} (Posted: {date_posted})")
+
+    all_results = []
+
+    for job_title in job_titles:
+        for location in locations:
+            results = search_jobs(job_title, location, date_posted)
+            all_results.extend(results)
+
+    print(f"✅ Found {len(all_results)} jobs")
+
+    previous_jobs = load_previous_jobs()
+    new_jobs = [job for job in all_results if job['id'] not in previous_jobs]
+
+    print(f"🆕 New jobs: {len(new_jobs)}")
+
     if new_jobs:
-        send_email(new_jobs, settings)
-        save_cache(cache + new_jobs)
+        write_jobs_to_sheet(new_jobs)
+        save_jobs(new_jobs)
         save_last_jobs(new_jobs)
+    else:
+        print("📭 No new jobs to add.")
